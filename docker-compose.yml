@@ -1,0 +1,46 @@
+services:
+
+  # ── Calculator Application ─────────────────────────────────────────────────
+  calculator:
+    image: greatwarrior44/java-calculator:latest
+    container_name: java-calculator
+    stdin_open: true          # Keep stdin open (console app needs input)
+    tty: true                 # Allocate a TTY
+    restart: on-failure
+    environment:
+      - APP_ENV=production
+      - APP_NAME=java-calculator
+    networks:
+      - calculator-net
+    healthcheck:
+      test: ["CMD", "java", "-version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Nginx — Status Dashboard (demonstrates Compose orchestration) ──────────
+  nginx:
+    image: nginx:alpine
+    container_name: calculator-nginx
+    restart: always
+    ports:
+      - "8080:80"             # Access the status page at http://localhost:8080
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/index.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - calculator-net
+    depends_on:
+      - calculator
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+# ── Network ────────────────────────────────────────────────────────────────────
+networks:
+  calculator-net:
+    driver: bridge
