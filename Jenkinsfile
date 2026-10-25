@@ -10,8 +10,7 @@ pipeline {
     }
 
     triggers {
-        // Trigger on every push to GitHub (configure webhook in GitHub repo settings)
-        // Fallback: poll SCM every 2 minutes if webhook is not configured
+        // Poll SCM every 2 minutes as fallback (webhook not needed for local Jenkins)
         pollSCM('H/2 * * * *')
     }
 
@@ -27,7 +26,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo '── Building JAR with Maven ──'
-                sh 'mvn clean package -DskipTests -q'
+                bat 'mvn clean package -DskipTests -q'
             }
             post {
                 success { echo 'Build stage succeeded.' }
@@ -38,7 +37,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo '── Running JUnit 5 tests ──'
-                sh 'mvn test'
+                bat 'mvn test'
             }
             post {
                 always {
@@ -53,7 +52,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo "── Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG} ──"
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
             }
         }
 
@@ -65,12 +64,12 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    bat """
+                        echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin
                         docker push ${IMAGE_NAME}:${IMAGE_TAG}
                         docker push ${IMAGE_NAME}:latest
                         docker logout
-                    '''
+                    """
                 }
             }
         }
@@ -78,8 +77,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo '── Deploying with Docker Compose ──'
-                sh '''
-                    docker compose down --remove-orphans || true
+                bat '''
+                    docker compose down --remove-orphans
                     docker compose up -d
                 '''
             }
@@ -90,7 +89,7 @@ pipeline {
         success {
             mail(
                 to:      "${EMAIL}",
-                subject: "✅ Jenkins Build #${env.BUILD_NUMBER} – SUCCESS",
+                subject: "Jenkins Build #${env.BUILD_NUMBER} - SUCCESS",
                 body:    """\
 Build #${env.BUILD_NUMBER} of ${env.JOB_NAME} succeeded.
 
@@ -105,7 +104,7 @@ View build: ${env.BUILD_URL}
         failure {
             mail(
                 to:      "${EMAIL}",
-                subject: "❌ Jenkins Build #${env.BUILD_NUMBER} – FAILURE",
+                subject: "Jenkins Build #${env.BUILD_NUMBER} - FAILURE",
                 body:    """\
 Build #${env.BUILD_NUMBER} of ${env.JOB_NAME} FAILED.
 
@@ -119,7 +118,7 @@ View build: ${env.BUILD_URL}
         }
         always {
             echo 'Pipeline finished. Cleaning up local Docker images...'
-            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+            bat "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} & exit /b 0"
         }
     }
 }
