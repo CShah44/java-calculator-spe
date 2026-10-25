@@ -1,0 +1,21 @@
+# Maven build artifacts
+target/
+
+# IDE and OS files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db
+
+# Git metadata
+.git/
+.gitignore
+
+# Documentation
+*.md
+
+# Source — only the built JAR is needed in the runtime stage
+# (source is copied explicitly in the builder stage)
