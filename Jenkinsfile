@@ -2,15 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Docker Hub image name — update to your Docker Hub username
-        IMAGE_NAME    = 'greatwarrior44/java-calculator'
-        IMAGE_TAG     = "${env.BUILD_NUMBER}"
-        REGISTRY      = 'docker.io'
-        EMAIL = 'chaityanirmal.shah@iiitb.ac.in'
+        IMAGE_NAME = 'greatwarrior44/java-calculator'
+        IMAGE_TAG  = "${env.BUILD_NUMBER}"
+        EMAIL      = 'chaityanirmal.shah@iiitb.ac.in'
     }
 
     triggers {
-        // Poll SCM every 2 minutes as fallback (webhook not needed for local Jenkins)
         pollSCM('H/2 * * * *')
     }
 
@@ -26,7 +23,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo '── Building JAR with Maven ──'
-                bat 'mvn clean package -DskipTests -q'
+                sh 'mvn clean package -DskipTests -q'
             }
             post {
                 success { echo 'Build stage succeeded.' }
@@ -37,11 +34,10 @@ pipeline {
         stage('Test') {
             steps {
                 echo '── Running JUnit 5 tests ──'
-                bat 'mvn test'
+                sh 'mvn test'
             }
             post {
                 always {
-                    // Publish JUnit XML reports in Jenkins
                     junit 'target/surefire-reports/*.xml'
                 }
                 success { echo 'All tests passed.' }
@@ -52,7 +48,7 @@ pipeline {
         stage('Docker Build') {
             steps {
                 echo "── Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG} ──"
-                bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
             }
         }
 
@@ -64,12 +60,12 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    bat """
-                        echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push ${IMAGE_NAME}:latest
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push greatwarrior44/java-calculator:${IMAGE_TAG}
+                        docker push greatwarrior44/java-calculator:latest
                         docker logout
-                    """
+                    '''
                 }
             }
         }
@@ -77,8 +73,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo '── Deploying with Docker Compose ──'
-                bat '''
-                    docker compose down --remove-orphans
+                sh '''
+                    docker compose down --remove-orphans || true
                     docker compose up -d
                 '''
             }
@@ -118,7 +114,7 @@ View build: ${env.BUILD_URL}
         }
         always {
             echo 'Pipeline finished. Cleaning up local Docker images...'
-            bat "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} & exit /b 0"
+            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
         }
     }
 }
