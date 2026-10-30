@@ -16,30 +16,62 @@ public class Main {
         System.out.println("    Java Calculator App      ");
         System.out.println("=============================");
         System.out.println("Operations: +, -, *, /");
-        System.out.println("Type 'exit' to quit.");
+        System.out.println("Type 'exit' at any prompt to quit.");
         System.out.println();
 
         while (true) {
-            System.out.print("Enter expression (e.g. 10 + 5): ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("exit")) {
+            // --- First number ---
+            System.out.print("Enter first number (a): ");
+            String inputA = scanner.nextLine().trim();
+            if (inputA.equalsIgnoreCase("exit")) {
                 System.out.println("Goodbye!");
                 break;
             }
 
+            double a;
             try {
-                String[] parts = input.split("\\s+");
-                if (parts.length != 3) {
-                    System.out.println("Invalid input. Use format: <number> <operator> <number>");
-                    continue;
-                }
+                a = Double.parseDouble(inputA);
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number. Please enter a valid number.");
+                System.out.println();
+                continue;
+            }
 
-                double a = Double.parseDouble(parts[0]);
-                String operator = parts[1];
-                double b = Double.parseDouble(parts[2]);
+            // --- Operator ---
+            System.out.print("Enter operation (+, -, *, /): ");
+            String operator = scanner.nextLine().trim();
+            if (operator.equalsIgnoreCase("exit")) {
+                System.out.println("Goodbye!");
+                break;
+            }
+
+            if (!operator.equals("+") && !operator.equals("-")
+                    && !operator.equals("*") && !operator.equals("/")) {
+                System.out.println("Error: Unknown operator '" + operator + "'. Use +, -, *, /");
+                System.out.println();
+                continue;
+            }
+
+            // --- Second number ---
+            System.out.print("Enter second number (b): ");
+            String inputB = scanner.nextLine().trim();
+            if (inputB.equalsIgnoreCase("exit")) {
+                System.out.println("Goodbye!");
+                break;
+            }
+
+            double b;
+            try {
+                b = Double.parseDouble(inputB);
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Invalid number. Please enter a valid number.");
+                System.out.println();
+                continue;
+            }
+
+            // --- Compute ---
+            try {
                 double result;
-
                 switch (operator) {
                     case "+":
                         result = calculator.add(a, b);
@@ -54,16 +86,13 @@ public class Main {
                         result = calculator.divide(a, b);
                         break;
                     default:
-                        System.out.println("Unknown operator: " + operator + ". Use +, -, *, /");
+                        // Already validated above; should never reach here.
                         continue;
                 }
-
                 System.out.printf("Result: %.2f%n%n", result);
-
-            } catch (NumberFormatException e) {
-                System.out.println("Error: Invalid number format. Please enter valid numbers.");
             } catch (ArithmeticException e) {
                 System.out.println("Error: " + e.getMessage());
+                System.out.println();
             }
         }
 

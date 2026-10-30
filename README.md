@@ -51,20 +51,26 @@ java -jar target/java-calculator-1.0-SNAPSHOT.jar
 
 ## Usage
 
+The application prompts for each input separately — first number `a`, the operator, then second number `b`.
+
 ```
 =============================
     Java Calculator App
 =============================
 Operations: +, -, *, /
-Type 'exit' to quit.
+Type 'exit' at any prompt to quit.
 
-Enter expression (e.g. 10 + 5): 10 + 5
+Enter first number (a): 10
+Enter operation (+, -, *, /): +
+Enter second number (b): 5
 Result: 15.00
 
-Enter expression (e.g. 10 + 5): 9 / 3
+Enter first number (a): 9
+Enter operation (+, -, *, /): /
+Enter second number (b): 3
 Result: 3.00
 
-Enter expression (e.g. 10 + 5): exit
+Enter first number (a): exit
 Goodbye!
 ```
 
