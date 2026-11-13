@@ -150,7 +150,7 @@ java-calculator/
 
 ## Author
 
-**Chaitya Shah**: IMT2023055
+**Chaitya Shah** - IMT2023055
 
 ## Links
 
